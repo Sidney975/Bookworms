@@ -1,0 +1,29 @@
+﻿@page
+@model Bookworms.Pages.HomeModel
+@{
+    // Change the page title if desired
+    ViewData["Title"] = "Profile Details";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (Model.UserProfile != null)
+{
+    <div class="profile-details">
+        <h2>@Model.UserProfile.FirstName @Model.UserProfile.LastName</h2>
+        <p><strong>Email:</strong> @Model.UserProfile.Email</p>
+        <p><strong>Mobile:</strong> @Model.UserProfile.PhoneNumber</p>
+        <p><strong>Billing Address:</strong> @Model.UserProfile.Billing_Address</p>
+        <p><strong>Shipping Address:</strong> @Model.UserProfile.Shipping_Address</p>
+        @if (!string.IsNullOrEmpty(Model.UserProfile.Photo))
+        {
+            <!-- Adjust the src path as needed (here we're assuming photos are stored in wwwroot/uploads/) -->
+            <img src="~/uploads/@Model.UserProfile.Photo" alt="Profile Photo" style="max-width:200px;" />
+        }
+        <p><strong>Credit Card:</strong> @Model.DecryptedCreditCard</p>
+    </div>
+}
+else
+{
+    <p>You must be logged in to view your profile details.</p>
+}
