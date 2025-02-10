@@ -1,4 +1,5 @@
 using Bookworms.Models;
+using Bookworms.Services;
 using Bookworms.ViewModels;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -14,19 +15,23 @@ namespace Bookworms.Pages
         private SignInManager<ApplicationUser> signInManager { get; }
         private readonly RoleManager<IdentityRole> roleManager;
 		private readonly IWebHostEnvironment webHostEnvironment;
-		[BindProperty]
+        private readonly PasswordHistoryService passwordHistoryService;
+
+        [BindProperty]
         public Register RModel { get; set; }
         public RegisterModel(UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         RoleManager<IdentityRole> roleManager,
-		IWebHostEnvironment webHostEnvironment)
+		IWebHostEnvironment webHostEnvironment,
+        PasswordHistoryService passwordHistoryService)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.roleManager = roleManager;
             this.webHostEnvironment = webHostEnvironment;
+            this.passwordHistoryService = passwordHistoryService;
 
-		}
+        }
 
         public async Task<IActionResult> OnPostAsync()
         {
@@ -45,12 +50,22 @@ namespace Bookworms.Pages
                     CreditCard = protector.Protect(RModel.CreditCard),
                     Billing_Address = RModel.BillingAddress,
                     Shipping_Address = RModel.ShippingAddress,
+                    TwoFactorEnabled = true,
+                    EmailConfirmed = true,
                 };
 
 				if (RModel.Photo != null && RModel.Photo.Length > 0)
 				{
-					// Determine the uploads folder path (e.g., wwwroot/uploads)
-					var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads");
+                    var allowedExtensions = new[] { ".jpg", ".png" };
+                    var extension = Path.GetExtension(RModel.Photo.FileName).ToLower();
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        ModelState.AddModelError("RModel.Photo", $"Files with extension {extension} are not allowed. Allowed extensions: {string.Join(", ", allowedExtensions)}");
+                        return Page();
+                    }
+
+                    // Determine the uploads folder path (e.g., wwwroot/uploads)
+                    var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads");
 					if (!Directory.Exists(uploadsFolder))
 					{
 						Directory.CreateDirectory(uploadsFolder);
@@ -88,7 +103,7 @@ namespace Bookworms.Pages
                 {
                     //Add users to Admin Role
                     result = await userManager.AddToRoleAsync(user, "Admin");
-
+                    await passwordHistoryService.StorePasswordAsync(user);
 
                     await signInManager.SignInAsync(user, false);
                     return RedirectToPage("Index");

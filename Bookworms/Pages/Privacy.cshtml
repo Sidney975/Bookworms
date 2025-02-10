@@ -1,29 +1,53 @@
 ﻿@page
 @model Bookworms.Pages.HomeModel
 @{
-    // Change the page title if desired
     ViewData["Title"] = "Profile Details";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="mb-0">Profile Details</h2>
+                </div>
+                <div class="card-body">
+                    @if (Model.UserProfile != null)
+                    {
+                        <div class="text-center mb-3">
+                            @if (!string.IsNullOrEmpty(Model.UserProfile.Photo))
+                            {
+                                <img src="~/uploads/@Model.UserProfile.Photo" class="rounded-circle shadow-sm" alt="Profile Photo" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #ddd;">
+                            }
+                            else
+                            {
+                                <img src="https://via.placeholder.com/150" class="rounded-circle shadow-sm" alt="Default Profile" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #ddd;">
+                            }
+                        </div>
 
-@if (Model.UserProfile != null)
-{
-    <div class="profile-details">
-        <h2>@Model.UserProfile.FirstName @Model.UserProfile.LastName</h2>
-        <p><strong>Email:</strong> @Model.UserProfile.Email</p>
-        <p><strong>Mobile:</strong> @Model.UserProfile.PhoneNumber</p>
-        <p><strong>Billing Address:</strong> @Model.UserProfile.Billing_Address</p>
-        <p><strong>Shipping Address:</strong> @Model.UserProfile.Shipping_Address</p>
-        @if (!string.IsNullOrEmpty(Model.UserProfile.Photo))
-        {
-            <!-- Adjust the src path as needed (here we're assuming photos are stored in wwwroot/uploads/) -->
-            <img src="~/uploads/@Model.UserProfile.Photo" alt="Profile Photo" style="max-width:200px;" />
-        }
-        <p><strong>Credit Card:</strong> @Model.DecryptedCreditCard</p>
+                        <h4 class="text-center">@Model.UserProfile.FirstName @Model.UserProfile.LastName</h4>
+
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Email:</strong> @Model.UserProfile.Email</li>
+                            <li class="list-group-item"><strong>Mobile:</strong> @Model.UserProfile.PhoneNumber</li>
+                            <li class="list-group-item"><strong>Billing Address:</strong> @Model.UserProfile.Billing_Address</li>
+                            <li class="list-group-item"><strong>Shipping Address:</strong> @Model.UserProfile.Shipping_Address</li>
+                            <li class="list-group-item"><strong>Credit Card:</strong> @Model.DecryptedCreditCard</li>
+                        </ul>
+
+                        <div class="text-center mt-4">
+                            <a href="/ChangePassword" class="btn btn-outline-danger">Change Password</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted">You must be logged in to view your profile details.</p>
+                        <div class="text-center">
+                            <a href="/Login" class="btn btn-primary">Login</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
-}
-else
-{
-    <p>You must be logged in to view your profile details.</p>
-}
+</div>

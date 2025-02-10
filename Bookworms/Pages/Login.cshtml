@@ -5,6 +5,15 @@
 
 <script src="https://www.google.com/recaptcha/api.js?render=6LdSwc4qAAAAAAkA68tIkMGBQpYrUN4KUpl2Wt9s"></script>
 <script>
+
+	window.onload = function () {
+		var sessionExpired = @(Model.SessionExpired.ToString().ToLower());  // ✅ Use Model instead of Context
+		if (sessionExpired) {
+			alert("Another session detected, you have been signed out.");
+		}
+	};
+
+
 	// When the page loads, execute reCAPTCHA for the "login" action.
 	grecaptcha.ready(function () {
 		grecaptcha.execute('6LdSwc4qAAAAAAkA68tIkMGBQpYrUN4KUpl2Wt9s', { action: 'Login' }).then(function (token) {
@@ -12,7 +21,9 @@
 			document.getElementById("g-recaptcha-response").value = token;
 		});
 	});
+
 </script>
+
 <div class="container mt-5">
 
 	<div class="row justify-content-center align-items-center">
@@ -44,6 +55,9 @@
 					<button type="submit" class="btn btn-primary">Login</button>
 				</div>
 			</form>
+			<div class="text-center mt-3">
+				<a asp-page="/ForgotPassword">Forgot your password?</a>
+			</div>
 		</div>
 	</div>
 </div>

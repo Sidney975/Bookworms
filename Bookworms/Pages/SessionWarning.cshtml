@@ -1,0 +1,13 @@
+﻿@page
+@model Bookworms.Pages.SessionWarningModel
+@{
+    ViewData["Title"] = "Session Warning";
+}
+
+<h3>Another session is active</h3>
+<p>You have logged in on another browser. Do you want to continue here?</p>
+
+<form method="post">
+    <button type="submit" asp-page-handler="Continue" class="btn btn-primary">Continue Here</button>
+    <button type="submit" asp-page-handler="LogoutOthers" class="btn btn-danger">Logout Other Sessions</button>
+</form>

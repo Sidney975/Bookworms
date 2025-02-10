@@ -1,12 +1,17 @@
 using Bookworms.Models;
+using Bookworms.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddDbContext<AuthDbContext>();
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<AuthDbContext>()
+	.AddDefaultTokenProviders();
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
 	// Customize password requirements here
@@ -19,6 +24,10 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 3;
     options.Lockout.AllowedForNewUsers = true;
+
+    options.SignIn.RequireConfirmedEmail = true;
+    options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+
 });
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -56,6 +65,15 @@ builder.Services.ConfigureApplicationCookie(Config =>
 
 builder.Services.AddDataProtection();
 
+builder.Services.AddTransient<IEmailSender, OutlookEmailSender>();
+
+builder.Services.AddScoped<AuditLogService>();
+
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, CustomClaimsPrincipalFactory>();
+
+builder.Services.AddScoped<PasswordHistoryService>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -75,6 +93,22 @@ app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity.IsAuthenticated)
+    {
+        Console.WriteLine("Claims after authentication:");
+        foreach (var claim in context.User.Claims)
+        {
+            Console.WriteLine($"Claim: {claim.Type} - {claim.Value}");
+        }
+    }
+    await next();
+});
+
+app.UseMiddleware<PasswordAgeMiddleware>();
+app.UseMiddleware<SessionValidationMiddleware>();
 
 app.MapRazorPages();
 

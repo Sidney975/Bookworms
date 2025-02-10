@@ -11,6 +11,9 @@ namespace Bookworms.Models
         {
             _configuration = configuration;
         }
+        public DbSet<AuditLog> AuditLogs { get; set; } 
+
+        public DbSet<PasswordHistory> PasswordHistories { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             string connectionString = _configuration.GetConnectionString("AuthConnectionString"); optionsBuilder.UseSqlServer(connectionString);
