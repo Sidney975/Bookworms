@@ -35,6 +35,8 @@ builder.Services.AddDistributedMemoryCache(); //save session in memory
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromSeconds(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
 
@@ -54,6 +56,7 @@ builder.Services.AddAuthentication("MyCookieAuth")
 
 builder.Services.AddAuthorization(options =>
 {
+
     options.AddPolicy("MustBelongToHRDepartment",
         policy => policy.RequireClaim("Department", "HR"));
 });
@@ -61,6 +64,15 @@ builder.Services.AddAuthorization(options =>
 builder.Services.ConfigureApplicationCookie(Config =>
 {
     Config.LoginPath = "/Login";
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.LoginPath = "/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
 builder.Services.AddDataProtection();
@@ -107,6 +119,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseSession();
 app.UseMiddleware<PasswordAgeMiddleware>();
 app.UseMiddleware<SessionValidationMiddleware>();
 

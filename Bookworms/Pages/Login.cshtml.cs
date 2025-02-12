@@ -17,6 +17,9 @@ namespace Bookworms.Pages
 		public Login LModel { get; set; }
 
 		[BindProperty]
+		public bool AnotherSession { get; set; }
+
+        [BindProperty]
 		public bool SessionExpired { get; set; }
 
 		private readonly SignInManager<ApplicationUser> signInManager;
@@ -40,9 +43,14 @@ namespace Bookworms.Pages
         {
 			if (Request.Query.ContainsKey("sessionExpired"))
 			{
-				SessionExpired = true;
+				AnotherSession = true;
 			}
-		}
+            if (Request.Query.ContainsKey("timeout"))
+            {
+                SessionExpired = true;
+            }
+            
+        }
 
 		// Helper method to verify reCAPTCHA v3 token
 		private async Task<bool> VerifyRecaptchaAsync(string token)

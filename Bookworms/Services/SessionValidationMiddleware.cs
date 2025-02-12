@@ -56,6 +56,25 @@ public class SessionValidationMiddleware
                     }
                 }
             }
+
+            var lastActivity = context.Session.GetString("LastActivityTime");
+            if (!string.IsNullOrEmpty(lastActivity))
+            {
+                var lastActivityTime = DateTime.Parse(lastActivity);
+                if ((DateTime.UtcNow - lastActivityTime).TotalMinutes > 5) 
+                {
+                    context.Session.Clear(); 
+                    await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+					context.Response.Redirect($"/Login?timeout=true&ReturnUrl={Uri.EscapeDataString(context.Request.Path)}");
+					Console.WriteLine("Redirecting due to session timeout: " + $"/Login?timeout=true&ReturnUrl={context.Request.Path}");
+
+					return;
+                }
+            }
+
+            // Update session activity time
+            context.Session.SetString("LastActivityTime", DateTime.UtcNow.ToString());
+
         }
 
         await _next(context);

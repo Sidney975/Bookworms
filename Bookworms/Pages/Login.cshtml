@@ -7,9 +7,13 @@
 <script>
 
 	window.onload = function () {
-		var sessionExpired = @(Model.SessionExpired.ToString().ToLower());  // ✅ Use Model instead of Context
-		if (sessionExpired) {
+		var AnotherSession = @(Model.AnotherSession.ToString().ToLower());
+		var sessionExpired = @(Model.SessionExpired.ToString().ToLower());
+		if (AnotherSession) {
 			alert("Another session detected, you have been signed out.");
+		}
+		else if (sessionExpired) {
+			alert("Session timeout, you have been signed out.");
 		}
 	};
 

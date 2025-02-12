@@ -14,16 +14,18 @@ namespace Bookworms.Pages
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly PasswordHistoryService _passwordHistoryService;
-
+        private readonly AuditLogService _auditLogService;
 
         public ChangePasswordModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            PasswordHistoryService passwordHistoryService)
+            PasswordHistoryService passwordHistoryService,
+            AuditLogService auditLogService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _passwordHistoryService = passwordHistoryService;
+            _auditLogService = auditLogService;
         }
 
         [BindProperty]
@@ -52,14 +54,14 @@ namespace Bookworms.Pages
             }
 
             // Define minimum password age (e.g., 1 day)
-   //         TimeSpan minPasswordAge = TimeSpan.FromDays(1);
-			//if (DateTime.UtcNow - user.LastPasswordChangeDate < minPasswordAge)
-			//{
-			//	ModelState.AddModelError(string.Empty, $"You can change your password only once every {minPasswordAge.TotalDays} days.");
-			//	return Page();
-			//}
+            TimeSpan minPasswordAge = TimeSpan.FromDays(1);
+            if (DateTime.UtcNow - user.LastPasswordChangeDate < minPasswordAge)
+            {
+                ModelState.AddModelError(string.Empty, $"You can change your password only once every {minPasswordAge.TotalDays} days.");
+                return Page();
+            }
 
-			var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.CurrentPassword, Input.NewPassword);
+            var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.CurrentPassword, Input.NewPassword);
             if (!changePasswordResult.Succeeded)
             {
                 foreach (var error in changePasswordResult.Errors)
@@ -73,8 +75,8 @@ namespace Bookworms.Pages
             user.LastPasswordChangeDate = DateTime.UtcNow;
 			await _userManager.UpdateAsync(user);
 
-
-			await _signInManager.RefreshSignInAsync(user);
+            await _auditLogService.LogAsync(user.Id, "Change Password", "User has changed password.");
+            await _signInManager.RefreshSignInAsync(user);
             return RedirectToPage("Index");
         }
     }

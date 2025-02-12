@@ -1,4 +1,5 @@
 using Bookworms.Models;
+using Bookworms.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +11,14 @@ namespace Bookworms.Pages
     public class ResetPasswordModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly AuditLogService _auditLogService;
+        private readonly PasswordHistoryService _passwordHistoryService;
 
-        public ResetPasswordModel(UserManager<ApplicationUser> userManager)
+        public ResetPasswordModel(UserManager<ApplicationUser> userManager, AuditLogService auditLogService, PasswordHistoryService passwordHistoryService)
         {
             _userManager = userManager;
+            _auditLogService = auditLogService;
+            _passwordHistoryService = passwordHistoryService;
         }
 
         [BindProperty]
@@ -59,9 +64,21 @@ namespace Bookworms.Pages
                 return RedirectToPage("ResetPasswordConfirmation");
             }
 
+            if (await _passwordHistoryService.IsPasswordReusedAsync(user, Input.NewPassword))
+            {
+                ModelState.AddModelError(string.Empty, "You cannot reuse a previously used password.");
+                return Page(); // Prevents token from being used
+            }
+
             var resetResult = await _userManager.ResetPasswordAsync(user, Input.Token, Input.NewPassword);
             if (resetResult.Succeeded)
             {
+                await _passwordHistoryService.StorePasswordAsync(user);
+
+                user.LastPasswordChangeDate = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+
+                await _auditLogService.LogAsync(user.Id, "Reset Password", "User has reset password.");
                 // Optionally, update password history here if you have implemented that.
                 return RedirectToPage("ResetPasswordConfirmation");
             }

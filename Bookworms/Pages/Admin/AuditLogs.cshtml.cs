@@ -1,4 +1,5 @@
 using Bookworms.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Bookworms.Pages.Admin
 {
+    [Authorize(Roles = "Admin")]
     public class AuditLogsModel : PageModel
     {
         private readonly AuthDbContext _context;
